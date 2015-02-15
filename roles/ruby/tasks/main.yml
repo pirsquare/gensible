@@ -1,0 +1,41 @@
+---
+
+- name: Add Ruby source
+  get_url: url=http://ftp.ruby-lang.org/pub/ruby/2.1/ruby-2.1.1.tar.gz
+           dest=/opt/files/ruby-2.1.1.tar.gz
+           sha256sum=c843df31ae88ed49f5393142b02b9a9f5a6557453805fd489a76fbafeae88941
+
+- name: Tar Ruby source
+  command: >
+    creates=/opt/ruby-2.1.1
+    chdir=/opt/files
+    tar xzf ruby-2.1.1.tar.gz -C /opt
+  register: tar_ruby
+
+- name: Install Ruby
+  command: chdir=/opt/ruby-2.1.1 {{ item }}
+  when: tar_ruby.changed
+  with_items:
+    - ./configure --prefix=/usr
+    - make
+    - make install
+
+- name: Add Ruby Gem source
+  get_url: url=http://production.cf.rubygems.org/rubygems/rubygems-1.8.25.tgz
+           dest=/opt/files/rubygems-1.8.25.tgz
+           sha256sum=649348ddf8746887fb1ee79c55dc508f0627d3d0bfa7fcdbcd4edb24908f1cc8
+
+- name: Tar Ruby Gem source
+  command: >
+    creates=/opt/rubygems-1.8.25
+    chdir=/opt/files
+    tar xzf rubygems-1.8.25.tgz -C /opt
+  register: tar_gems
+
+- name: Install Ruby Gem
+  command: chdir=/opt/rubygems-1.8.25 /usr/bin/ruby setup.rb {{ item }}
+  when: tar_gems.changed
+  with_items:
+    - config
+    - setup
+    - install
